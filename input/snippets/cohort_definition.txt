@@ -1,0 +1,4 @@
+<!-- Cohort -->
+<component id="intervention_cohort">
+  <recruitmentOnly/>
+</component>

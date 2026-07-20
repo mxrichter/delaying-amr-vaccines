@@ -1,0 +1,1249 @@
+
+
+---
+
+population_size: 25000
+
+timestep: 30 # in days
+
+init_date: "1990-01-01"
+
+# Length of burn-in period
+burn_in: 30 # in years
+
+# Length of simulation in years
+sim_duration: 35
+
+# Lead time of deployment in years
+lead_time: 15
+
+# Prevalence of resistant genotype after burn-in
+prevalence_resistant: 0.5
+
+# Length of parasite generation for calculation of selection coefficient
+parasite_generation: 60
+
+# Cohort structure in analysis
+cohorts:
+  include: no
+  tracking: "vaccine"
+  begin_recruitment: 0.0833 # in years, 0.0833 = 1 month
+  max_time: 1.0 # in years
+  
+age_groups: [] # [0, ..., 99]   
+
+resistance_scenarios: ""
+eir_filter: ""
+
+seasonality_profiles:
+- id: perennial
+  pattern: "vector"
+  values: [0.1]
+- id: seasonal1
+  pattern: "vector"
+  values: [0.00876415024678427, 0.026995483256594, 0.0647587978329459, 
+  0.120985362259572, 0.17603266338215, 0.199471140200716, 
+  0.17603266338215, 0.120985362259572, 0.0647587978329459, 
+  0.026995483256594, 0.00876415024678427, 0.002215924205969]
+  
+vaccination_strategies:
+- id: age
+  name: "Age-based"
+  doses:
+    initial: 
+      age: 0.75 # targetAge
+    booster:
+      age: 2.25 # targetAge
+  booster_conditional: yes
+- id: seasonal
+  name: "Seasonal"
+  doses:
+    initial:
+      age: [0.6667, 1.6667] # [minAge, maxAge]
+    booster:
+      age: [1.6667, 2.6667] # [minAge, maxAge]
+  booster_conditional: yes
+    
+vaccine:
+  efficacy: [0.91, 0.49]
+  half_life: 0.61
+  k_decay: 0.69
+  resistance_scaler: 1
+
+ar_mkr_sensitive: 27.6
+lf_sensitive_level: 0.032
+
+seasonality: "perennial" # see seasonality_profiles
+
+vaccine_deployment: "age" # see vaccination_strategies
+
+lhc_outcomes: ["selection_coefficient"]
+
+monitoring:
+- id: 0
+  name: "nHost"
+- id: 1
+  name: "nInfect"
+- id: 2
+  name: "nExpectd"
+- id: 3
+  name: "nPatent"
+- id: 7
+  name: "nTransmit"
+- id: 11
+  name: "nTreatments1"
+- id: 12
+  name: "nTreatments2"
+- id: 13
+  name: "nTreatments3"
+- id: 14
+  name: "nUncomp"
+- id: 15
+  name: "nSevere"
+- id: 20
+  name: "nEPIVaccinations"
+- id: 22
+  name: "nMassVaccinations"
+- id: 30
+  name: "innoculationsPerAgeGroup"
+- id: 35
+  name: "inputEIR"
+- id: 36
+  name: "simulatedEIR"
+- id: 64
+  name: "nTreatDiagnostics"
+- id: 69
+  name: "nInfectByGenotype"
+- id: 70
+  name: "nPatentByGenotype"
+- id: 72
+  name: "nHostDrugConcNonZero"
+
+snippets:
+- snippet:
+    parameters: &spread_lhc_parameters
+      fixed:
+        coverage_reduced: 0.75
+        prevalence_resistant: 0.5
+      continuous:
+        access:
+          array_lhc:
+            lb: 0.0356
+            ub: 0.5319
+        ar_mkr_resistant: 
+          array_lhc:
+            lb: 0.0
+            ub: 4.6
+        eir:
+          array_lhc:
+            lb: 0.1
+            ub: 80
+        coverage: 
+          array_lhc:
+            lb: 0.0
+            ub: 1.0
+        lf_resistance_level: 
+          array_lhc: 
+            lb: 0.032
+            ub: 2.5
+- snippet: &morbidity_seasonal_30d_eir
+    [3.0, 5.6, 7.9, 12.6, 17.9, 33.7, 41.7, 100.5, 593.8]
+- snippet: &morbidity_perennial_30d_eir
+    [1.3, 2.6, 4.4, 6.1, 8.3, 13.9, 16.6, 37.3, 252.1]
+- snippet: &treat_seasonal_5d_eir
+    [0.1, 0.6, 7.6, 9.1, 11.1, 23.7, 31.1, 57.4, 148.5]
+- snippet: &treat_perennial_5d_eir
+    [0.1, 0.6, 7.6, 9.1, 11.1, 23.7, 31.1, 57.4, 148.5]
+
+scenarios:
+
+# ---- SENSITIVITY ANALYSIS OF SELECTION COEFFICIENT ----
+
+# ---- Seasonal transmission setting ----
+    
+# Deployment of RTS,S/AS01 to children
+- id: spread_seasonal
+  xml_template: "ACT_byage_cohort_early"
+  seasonality: "seasonal1"
+  population_size: 100000
+  vaccine_deployment: "seasonal"
+  parameters: *spread_lhc_parameters
+  ar_mkr_sensitive: 4.6
+  vaccination_strategies:
+  - id: seasonal
+    name: "seasonal"
+    doses:
+      initial: 
+        age: [0.6667, 1.6667]
+      booster:
+        age: [[1.6667, 2.6667], [2.6667, 3.6667], [3.6667, 4.6667], [4.6667, 5.6667]] # [minAge, maxAge]
+    booster_conditional: no
+  vaccine:
+    efficacy: [0.911, 0.7745]
+    half_life: 0.61
+    k_decay: 0.69
+    resistance_scaler: 1.0
+
+# Deployment of longer-lasting vaccine to children
+- id: spread_seasonal_altvax
+  xml_template: "ACT_byage_cohort_early"
+  population_size: 100000
+  seasonality: "seasonal1"
+  vaccine_deployment: "seasonal"
+  parameters: *spread_lhc_parameters
+  ar_mkr_sensitive: 4.6
+  vaccination_strategies:
+  - id: seasonal
+    name: "seasonal"
+    doses:
+      initial: 
+        age: [0.6667, 1.6667]
+      booster:
+        age: [[1.6667, 2.6667], [2.6667, 3.6667], [3.6667, 4.6667], [4.6667, 5.6667]] # [minAge, maxAge]
+    booster_conditional: no
+  vaccine:
+    efficacy: [0.90, 0.89]
+    half_life: 2.56
+    k_decay: 0.75
+    resistance_scaler: 1.0
+
+# Deployment of longer-lasting vaccine as mass vaccination
+- id: spread_seasonal_altvax_massvax
+  xml_template: "ACT_byage_cohort_early"
+  population_size: 100000
+  seasonality: "seasonal1"
+  vaccine_deployment: "seasonal"
+  parameters: *spread_lhc_parameters
+  ar_mkr_sensitive: 4.6
+  vaccination_strategies:
+  - id: seasonal
+    name: "seasonal"
+    doses:
+      initial: 
+        age: [0.6667, 50.6667]
+      booster:
+        age: [[1.6667, 2.6667], [2.6667, 3.6667], [3.6667, 4.6667], 
+        [4.6667, 5.6667], [5.6667, 6.6667], [6.6667, 7.6667], 
+        [7.6667, 8.6667], [8.6667, 9.6667], [9.6667, 10.6667], 
+        [10.6667, 11.6667], [11.6667, 12.6667], [12.6667, 13.6667], 
+        [13.6667, 14.6667], [14.6667, 15.6667], [15.6667, 16.6667], 
+        [16.6667, 17.6667], [17.6667, 18.6667], [18.6667, 19.6667], 
+        [19.6667, 20.6667], [20.6667, 21.6667], [21.6667, 22.6667], 
+        [22.6667, 23.6667], [23.6667, 24.6667], [24.6667, 25.6667], 
+        [25.6667, 26.6667], [26.6667, 27.6667], [27.6667, 28.6667], 
+        [28.6667, 29.6667], [29.6667, 30.6667], [30.6667, 31.6667], 
+        [31.6667, 32.6667], [32.6667, 33.6667], [33.6667, 34.6667], 
+        [34.6667, 35.6667], [35.6667, 36.6667], [36.6667, 37.6667], 
+        [37.6667, 38.6667], [38.6667, 39.6667], [39.6667, 40.6667], 
+        [40.6667, 41.6667], [41.6667, 42.6667], [42.6667, 43.6667], 
+        [43.6667, 44.6667], [44.6667, 45.6667], [45.6667, 46.6667], 
+        [46.6667, 47.6667], [47.6667, 48.6667], [48.6667, 49.6667], 
+        [49.6667, 50.6667]] # [minAge, maxAge]
+    booster_conditional: no
+  vaccine:
+    efficacy: [0.90, 0.89]
+    half_life: 2.56
+    k_decay: 0.75
+    resistance_scaler: 1.0
+
+# Deployment of RTS,S/AS01-like vaccine as mass vaccination
+- id: spread_seasonal_massvax
+  xml_template: "ACT_byage_cohort_early"
+  population_size: 100000
+  seasonality: "seasonal1"
+  vaccine_deployment: "seasonal"
+  parameters: *spread_lhc_parameters
+  ar_mkr_sensitive: 4.6
+  vaccination_strategies:
+  - id: seasonal
+    name: "seasonal"
+    doses:
+      initial: 
+        age: [0.6667, 50.6667]
+      booster:
+        age: [[1.6667, 2.6667], [2.6667, 3.6667], [3.6667, 4.6667], 
+        [4.6667, 5.6667], [5.6667, 6.6667], [6.6667, 7.6667], 
+        [7.6667, 8.6667], [8.6667, 9.6667], [9.6667, 10.6667], 
+        [10.6667, 11.6667], [11.6667, 12.6667], [12.6667, 13.6667], 
+        [13.6667, 14.6667], [14.6667, 15.6667], [15.6667, 16.6667], 
+        [16.6667, 17.6667], [17.6667, 18.6667], [18.6667, 19.6667], 
+        [19.6667, 20.6667], [20.6667, 21.6667], [21.6667, 22.6667], 
+        [22.6667, 23.6667], [23.6667, 24.6667], [24.6667, 25.6667], 
+        [25.6667, 26.6667], [26.6667, 27.6667], [27.6667, 28.6667], 
+        [28.6667, 29.6667], [29.6667, 30.6667], [30.6667, 31.6667], 
+        [31.6667, 32.6667], [32.6667, 33.6667], [33.6667, 34.6667], 
+        [34.6667, 35.6667], [35.6667, 36.6667], [36.6667, 37.6667], 
+        [37.6667, 38.6667], [38.6667, 39.6667], [39.6667, 40.6667], 
+        [40.6667, 41.6667], [41.6667, 42.6667], [42.6667, 43.6667], 
+        [43.6667, 44.6667], [44.6667, 45.6667], [45.6667, 46.6667], 
+        [46.6667, 47.6667], [47.6667, 48.6667], [48.6667, 49.6667], 
+        [49.6667, 50.6667]] # [minAge, maxAge]
+    booster_conditional: no
+  vaccine:
+    efficacy: [0.911, 0.7745]
+    half_life: 0.61
+    k_decay: 0.69
+    resistance_scaler: 1.0
+
+# ---- Perennial transmission setting ----
+
+# Deployment of RTS,S/AS01 to children
+- id: spread_perennial
+  xml_template: "ACT_byage_cohort_early"
+  seasonality: "perennial"
+  population_size: 100000
+  vaccine_deployment: "age"
+  parameters: *spread_lhc_parameters
+  ar_mkr_sensitive: 4.6
+  vaccination_strategies:
+  - id: age
+    name: "Age-based"
+    doses:
+      initial: 
+        age: 0.75 # targetAge
+      booster:
+        age: 1.75 # targetAge
+    booster_conditional: no
+  vaccine:
+    efficacy: [0.911, 0.7745]
+    half_life: 0.61
+    k_decay: 0.69
+    resistance_scaler: 1.0
+
+# Deployment of longer-lasting vaccine to children
+- id: spread_perennial_altvax
+  xml_template: "ACT_byage_cohort_early"
+  seasonality: "perennial"
+  population_size: 100000
+  vaccine_deployment: "age"
+  parameters: *spread_lhc_parameters
+  ar_mkr_sensitive: 4.6
+  vaccination_strategies:
+  - id: age
+    name: "Age-based"
+    doses:
+      initial: 
+        age: 0.75 # targetAge
+      booster:
+        age: 1.75 # targetAge
+    booster_conditional: no
+  vaccine:
+    efficacy: [0.90, 0.89]
+    half_life: 2.56
+    k_decay: 0.75
+    resistance_scaler: 1.0
+
+# Deployment of longer-lasting vaccine as mass vaccination
+- id: spread_perennial_altvax_massvax
+  xml_template: "ACT_byage_cohort_early"
+  population_size: 50000
+  seasonality: "perennial"
+  vaccine_deployment: "age"
+  parameters: *spread_lhc_parameters
+  ar_mkr_sensitive: 4.6
+  vaccination_strategies:
+  - id: age
+    name: "Age-based"
+    doses:
+      initial: 
+        age: [0.75, 50.75] # targetAge
+      booster:
+        age: [0.75, 50.75] # targetAge
+  vaccine:
+    efficacy: [0.90, 0.89]
+    half_life: 2.56
+    k_decay: 0.75
+    resistance_scaler: 1.0
+
+# Deployment of RTS,S/AS01-like vaccine as mass vaccination
+- id: spread_perennial_massvax
+  xml_template: "ACT_byage_cohort_early"
+  population_size: 100000
+  seasonality: "perennial"
+  vaccine_deployment: "age"
+  parameters: *spread_lhc_parameters
+  ar_mkr_sensitive: 4.6
+  vaccination_strategies:
+  - id: age
+    name: "Age-based"
+    doses:
+      initial: 
+        age: [0.75, 50.75] # targetAge
+      booster:
+        age: [0.75, 50.75] # targetAge
+  vaccine:
+    efficacy: [0.911, 0.7745]
+    half_life: 0.61
+    k_decay: 0.69
+    resistance_scaler: 1.0
+  
+  
+# ---- VACCINE EFFECTIVENESS ----
+
+# ---- Seasonal transmission setting ----
+
+# EIR fitting scenario to determine inputEIR values
+- id: morbidity_seasonal_eir
+  xml_template: "ACT_byage_cohort_early"
+  population_size: 50000
+  seasonality: "seasonal1"
+  age_groups: [0.9, 2, 5, 10] # in years, time of first dose (=0.9), and cut-off for children
+  parameters:
+    fixed:
+      coverage: 0.0
+      coverage_reduced: 0.75
+      access: [0.0356, 0.2412, 0.5319]
+      ar_mkr_resistant: 27.6
+      lf_resistance_level: 0.032
+      prevalence_resistant: 0.5
+    continuous:
+      eir:
+        array_lhc:
+          lb: 0.1
+          ub: 600
+  cohorts:
+    include: no
+    tracking: "intervention_cohort" # use "intervention_cohort" or "vaccine"
+    begin_recruitment: 0.9 # in years, 0.0833 = 1 month
+    max_time: 0 # in years, set to 0 if individuals should not be removed
+  vaccination_strategies:
+  - id: seasonal
+    name: "seasonal"
+    doses:
+      initial: 
+        age: [0.6667, 1.6667]
+      booster:
+        age: [[1.6667, 2.6667], [2.6667, 3.6667], [3.6667, 4.6667], [4.6667, 5.6667]] # [minAge, maxAge]
+    booster_conditional: no
+  vaccine:
+    efficacy: [0.911, 0.7745]
+    half_life: 0.61
+    k_decay: 0.69
+    resistance_scaler: 1.0
+  vaccine_deployment: "seasonal"
+  lhc_outcomes: []
+
+# Deployment of RTS,S/AS01 to children
+- id: morbidity_seasonal_ve
+  xml_template: "ACT_byage_cohort_early"
+  resistance_scenarios: "resistance_scenarios_lim.txt"
+  eir_filter: "morbidity_seasonal_eir"
+  population_size: 50000
+  seasonality: "seasonal1"
+  age_groups: [0.9, 2, 5, 10] # in years, time of first dose (=0.9), and cut-off for children
+  parameters:
+    fixed:
+      eir: *morbidity_seasonal_30d_eir
+      coverage: [0.0, 0.2, 0.6, 0.8, 1.0]
+      coverage_reduced: 0.75
+      access: [0.0356, 0.2412, 0.5319]
+      ar_mkr_resistant: [0.0, 1.0, 3.0, 5.0, 27.6]
+      lf_resistance_level: [0.032, 0.32, 2.5]
+      prevalence_resistant: 0.5
+  cohorts:
+    include: no
+    tracking: "intervention_cohort" # use "intervention_cohort" or "vaccine"
+    begin_recruitment: 0.9 # in years, 0.0833 = 1 month
+    max_time: 0 # in years, set to 0 if individuals should not be removed
+  vaccination_strategies:
+  - id: seasonal
+    name: "seasonal"
+    doses:
+      initial: 
+        age: [0.6667, 1.6667]
+      booster:
+        age: [[1.6667, 2.6667], [2.6667, 3.6667], [3.6667, 4.6667], [4.6667, 5.6667]] # [minAge, maxAge]
+    booster_conditional: no
+  vaccine:
+    efficacy: [0.911, 0.7745]
+    half_life: 0.61
+    k_decay: 0.69
+    resistance_scaler: 1.0
+  vaccine_deployment: "seasonal"
+  lhc_outcomes: []
+
+# Deployment of longer-lasting vaccine to children
+- id: morbidity_seasonal_altvax_ve
+  xml_template: "ACT_byage_cohort_early"
+  resistance_scenarios: "resistance_scenarios_lim.txt"
+  eir_filter: "morbidity_seasonal_eir"
+  population_size: 50000
+  seasonality: "seasonal1"
+  age_groups: [0.9, 2.0, 5.0, 10.0] # in years, time of first dose (=0.9), and cut-off for children
+  parameters:
+    fixed:
+      eir: *morbidity_seasonal_30d_eir
+      coverage: [0.0, 0.2, 0.6, 0.8, 1.0]
+      coverage_reduced: 0.75
+      access: [0.0356, 0.2412, 0.5319]
+      ar_mkr_resistant: [0.0, 1.0, 3.0, 5.0, 27.6]
+      lf_resistance_level: [0.032, 0.32, 2.5]
+      prevalence_resistant: 0.5
+  cohorts:
+    include: no
+    tracking: "intervention_cohort" # use "intervention_cohort" or "vaccine"
+    begin_recruitment: 0.9 # in years, 0.0833 = 1 month
+    max_time: 0 # in years, set to 0 if individuals should not be removed
+  vaccination_strategies:
+  - id: seasonal
+    name: "seasonal"
+    doses:
+      initial: 
+        age: [0.6667, 1.6667]
+      booster:
+        age: [[1.6667, 2.6667], [2.6667, 3.6667], [3.6667, 4.6667], [4.6667, 5.6667]] # [minAge, maxAge]
+    booster_conditional: no
+  vaccine:
+    efficacy: [0.90, 0.89]
+    half_life: 2.56
+    k_decay: 0.75
+    resistance_scaler: 1.0
+  vaccine_deployment: "seasonal"
+
+# Deployment of longer-lasting vaccine as mass vaccination
+- id: morbidity_seasonal_altvax_massvax_ve
+  xml_template: "ACT_byage_cohort_early"
+  resistance_scenarios: "resistance_scenarios_lim.txt"
+  eir_filter: "morbidity_seasonal_eir"
+  population_size: 50000
+  seasonality: "seasonal1"
+  age_groups: [0.9, 2.0, 5.0, 10.0] # in years, time of first dose (=0.9), and cut-off for children
+  parameters:
+    fixed:
+      eir: *morbidity_seasonal_30d_eir
+      coverage: [0.0, 0.2, 0.6, 0.8, 1.0]
+      coverage_reduced: 0.75
+      access: [0.0356, 0.2412, 0.5319]
+      ar_mkr_resistant: [0.0, 1.0, 3.0, 5.0, 27.6]
+      lf_resistance_level: [0.032, 0.32, 2.5]
+      prevalence_resistant: 0.5
+  cohorts:
+    include: no
+    tracking: "intervention_cohort" # use "intervention_cohort" or "vaccine"
+    begin_recruitment: 0.9 # in years, 0.0833 = 1 month
+    max_time: 0 # in years, set to 0 if individuals should not be removed
+  vaccination_strategies:
+  - id: seasonal
+    name: "seasonal"
+    doses:
+      initial: 
+        age: [0.6667, 50.6667]
+      booster:
+        age: [[1.6667, 2.6667], [2.6667, 3.6667], [3.6667, 4.6667], 
+        [4.6667, 5.6667], [5.6667, 6.6667], [6.6667, 7.6667], 
+        [7.6667, 8.6667], [8.6667, 9.6667], [9.6667, 10.6667], 
+        [10.6667, 11.6667], [11.6667, 12.6667], [12.6667, 13.6667], 
+        [13.6667, 14.6667], [14.6667, 15.6667], [15.6667, 16.6667], 
+        [16.6667, 17.6667], [17.6667, 18.6667], [18.6667, 19.6667], 
+        [19.6667, 20.6667], [20.6667, 21.6667], [21.6667, 22.6667], 
+        [22.6667, 23.6667], [23.6667, 24.6667], [24.6667, 25.6667], 
+        [25.6667, 26.6667], [26.6667, 27.6667], [27.6667, 28.6667], 
+        [28.6667, 29.6667], [29.6667, 30.6667], [30.6667, 31.6667], 
+        [31.6667, 32.6667], [32.6667, 33.6667], [33.6667, 34.6667], 
+        [34.6667, 35.6667], [35.6667, 36.6667], [36.6667, 37.6667], 
+        [37.6667, 38.6667], [38.6667, 39.6667], [39.6667, 40.6667], 
+        [40.6667, 41.6667], [41.6667, 42.6667], [42.6667, 43.6667], 
+        [43.6667, 44.6667], [44.6667, 45.6667], [45.6667, 46.6667], 
+        [46.6667, 47.6667], [47.6667, 48.6667], [48.6667, 49.6667], 
+        [49.6667, 50.6667]] # [minAge, maxAge]
+    booster_conditional: no
+  vaccine:
+    efficacy: [0.90, 0.89]
+    half_life: 2.56
+    k_decay: 0.75
+    resistance_scaler: 1.0
+  vaccine_deployment: "seasonal"
+
+# Deployment of RTS,S/AS01-like vaccine as mass vaccination
+- id: morbidity_seasonal_massvax_ve
+  xml_template: "ACT_byage_cohort_early"
+  resistance_scenarios: "resistance_scenarios_lim.txt"
+  eir_filter: "morbidity_seasonal_eir"
+  population_size: 50000
+  seasonality: "seasonal1"
+  age_groups: [0.9, 2.0, 5.0, 10.0] # in years, time of first dose (=0.9), and cut-off for children
+  parameters:
+    fixed:
+      eir: *morbidity_seasonal_30d_eir
+      coverage: [0.0, 0.2, 0.6, 0.8, 1.0]
+      coverage_reduced: 0.75
+      access: [0.0356, 0.2412, 0.5319]
+      ar_mkr_resistant: [0.0, 1.0, 3.0, 5.0, 27.6]
+      lf_resistance_level: [0.032, 0.32, 2.5]
+      prevalence_resistant: 0.5
+  cohorts:
+    include: no
+    tracking: "intervention_cohort" # use "intervention_cohort" or "vaccine"
+    begin_recruitment: 0.9 # in years, 0.0833 = 1 month
+    max_time: 0 # in years, set to 0 if individuals should not be removed
+  vaccination_strategies:
+  - id: seasonal
+    name: "seasonal"
+    doses:
+      initial: 
+        age: [0.6667, 50.6667]
+      booster:
+        age: [[1.6667, 2.6667], [2.6667, 3.6667], [3.6667, 4.6667], 
+        [4.6667, 5.6667], [5.6667, 6.6667], [6.6667, 7.6667], 
+        [7.6667, 8.6667], [8.6667, 9.6667], [9.6667, 10.6667], 
+        [10.6667, 11.6667], [11.6667, 12.6667], [12.6667, 13.6667], 
+        [13.6667, 14.6667], [14.6667, 15.6667], [15.6667, 16.6667], 
+        [16.6667, 17.6667], [17.6667, 18.6667], [18.6667, 19.6667], 
+        [19.6667, 20.6667], [20.6667, 21.6667], [21.6667, 22.6667], 
+        [22.6667, 23.6667], [23.6667, 24.6667], [24.6667, 25.6667], 
+        [25.6667, 26.6667], [26.6667, 27.6667], [27.6667, 28.6667], 
+        [28.6667, 29.6667], [29.6667, 30.6667], [30.6667, 31.6667], 
+        [31.6667, 32.6667], [32.6667, 33.6667], [33.6667, 34.6667], 
+        [34.6667, 35.6667], [35.6667, 36.6667], [36.6667, 37.6667], 
+        [37.6667, 38.6667], [38.6667, 39.6667], [39.6667, 40.6667], 
+        [40.6667, 41.6667], [41.6667, 42.6667], [42.6667, 43.6667], 
+        [43.6667, 44.6667], [44.6667, 45.6667], [45.6667, 46.6667], 
+        [46.6667, 47.6667], [47.6667, 48.6667], [48.6667, 49.6667], 
+        [49.6667, 50.6667]] # [minAge, maxAge]
+    booster_conditional: no
+  vaccine:
+    efficacy: [0.911, 0.7745]
+    half_life: 0.61
+    k_decay: 0.69
+    resistance_scaler: 1.0
+  vaccine_deployment: "seasonal"
+  lhc_outcomes: []
+
+# ---- Perennial transmission setting ----
+
+# EIR fitting scenario to determine inputEIR values
+- id: morbidity_perennial_eir
+  xml_template: "ACT_byage_cohort_early"
+  sim_duration: 31
+  population_size: 50000
+  seasonality: "perennial"
+  vaccine_deployment: "age"
+  age_groups: [0.9, 2, 5, 10] # in years, time of first dose (=0.9), and cut-off for children
+  parameters:
+    fixed:
+      coverage: 0.0
+      coverage_reduced: 0.75
+      access: [0.0356, 0.2412, 0.5319]
+      ar_mkr_resistant: 27.6
+      lf_resistance_level: 0.032
+      prevalence_resistant: 0.5
+    continuous:
+      eir:
+        array_lhc:
+          lb: 0.1
+          ub: 600
+  cohorts:
+    include: no
+    tracking: "intervention_cohort" # use "intervention_cohort" or "vaccine"
+    begin_recruitment: 0.9 # in years, 0.0833 = 1 month
+    max_time: 0 # in years, set to 0 if individuals should not be removed
+  vaccination_strategies:
+  - id: age
+    name: "Age-based"
+    doses:
+      initial: 
+        age: 0.75 # targetAge
+      booster:
+        age: 1.75 # targetAge
+  vaccine:
+    efficacy: [0.911, 0.7745]
+    half_life: 0.61
+    k_decay: 0.69
+    resistance_scaler: 1.0
+
+# Deployment of RTS,S/AS01 to children
+- id: morbidity_perennial_ve
+  xml_template: "ACT_byage_cohort_early"
+  resistance_scenarios: "resistance_scenarios_lim.txt"
+  eir_filter: "morbidity_perennial_eir"
+  population_size: 50000
+  seasonality: "perennial"
+  vaccine_deployment: "age"
+  age_groups: [0.9, 2, 5, 10] # in years, time of first dose (=0.9), and cut-off for children
+  parameters:
+    fixed:
+      eir: *morbidity_perennial_30d_eir
+      coverage: [0.0, 0.2, 0.6, 0.8, 1.0]
+      coverage_reduced: 0.75
+      access: [0.0356, 0.2412, 0.5319]
+      ar_mkr_resistant: [0.0, 1.0, 3.0, 5.0, 27.6]
+      lf_resistance_level: [0.032, 0.32, 2.5]
+      prevalence_resistant: 0.5
+  cohorts:
+    include: no
+    tracking: "intervention_cohort" # use "intervention_cohort" or "vaccine"
+    begin_recruitment: 0.9 # in years, 0.0833 = 1 month
+    max_time: 0 # in years, set to 0 if individuals should not be removed
+  vaccination_strategies:
+  - id: age
+    name: "Age-based"
+    doses:
+      initial: 
+        age: 0.75 # targetAge
+      booster:
+        age: 1.75 # targetAge
+  vaccine:
+    efficacy: [0.911, 0.7745]
+    half_life: 0.61
+    k_decay: 0.69
+    resistance_scaler: 1.0
+
+# Deployment of longer-lasting vaccine to children
+- id: morbidity_perennial_altvax_ve
+  xml_template: "ACT_byage_cohort_early"
+  resistance_scenarios: "resistance_scenarios_lim.txt"
+  eir_filter: "morbidity_perennial_eir"
+  population_size: 50000
+  seasonality: "perennial"
+  age_groups: [0.9, 2.0, 5.0, 10.0] # in years, time of first dose (=0.9), and cut-off for children
+  parameters:
+    fixed:
+      eir: *morbidity_perennial_30d_eir
+      coverage: [0.0, 0.2, 0.6, 0.8, 1.0]
+      coverage_reduced: 0.75
+      access: [0.0356, 0.2412, 0.5319]
+      ar_mkr_resistant: [0.0, 1.0, 3.0, 5.0, 27.6]
+      lf_resistance_level: [0.032, 0.32, 2.5]
+      prevalence_resistant: 0.5
+  cohorts:
+    include: no
+    tracking: "intervention_cohort" # use "intervention_cohort" or "vaccine"
+    begin_recruitment: 0.9 # in years, 0.0833 = 1 month
+    max_time: 0 # in years, set to 0 if individuals should not be removed
+  vaccination_strategies:
+  - id: age
+    name: "Age-based"
+    doses:
+      initial: 
+        age: 0.75 # targetAge
+      booster:
+        age: 1.75 # targetAge
+  vaccine:
+    efficacy: [0.90, 0.89]
+    half_life: 2.56
+    k_decay: 0.75
+    resistance_scaler: 1.0
+  vaccine_deployment: "age"
+  
+# Deployment of longer-lasting vaccine as mass vaccination
+- id: morbidity_perennial_altvax_massvax_ve
+  xml_template: "ACT_byage_cohort_early"
+  resistance_scenarios: "resistance_scenarios_lim.txt"
+  eir_filter: "morbidity_perennial_eir"
+  population_size: 50000
+  seasonality: "perennial"
+  vaccine_deployment: "age"
+  age_groups: [0.9, 2, 5, 10] # in years, time of first dose (=0.9), and cut-off for children
+  parameters:
+    fixed:
+      eir: *morbidity_perennial_30d_eir
+      coverage: [0.0, 0.2, 0.6, 0.8, 1.0]
+      coverage_reduced: 0.75
+      access: [0.0356, 0.2412, 0.5319]
+      ar_mkr_resistant: [0.0, 1.0, 3.0, 5.0, 27.6]
+      lf_resistance_level: [0.032, 0.32, 2.5]
+      prevalence_resistant: 0.5
+  cohorts:
+    include: no
+    tracking: "intervention_cohort" # use "intervention_cohort" or "vaccine"
+    begin_recruitment: 0.9 # in years, 0.0833 = 1 month
+    max_time: 0 # in years, set to 0 if individuals should not be removed
+  vaccination_strategies:
+  - id: age
+    name: "Age-based"
+    doses:
+      initial: 
+        age: [0.75, 50.75] # targetAge
+      booster:
+        age: [0.75, 50.75] # targetAge
+  vaccine:
+    efficacy: [0.90, 0.89]
+    half_life: 2.56
+    k_decay: 0.75
+    resistance_scaler: 1.0
+
+# Deployment of RTS,S/AS01-like vaccine as mass vaccination
+- id: morbidity_perennial_massvax_ve
+  xml_template: "ACT_byage_cohort_early"
+  resistance_scenarios: "resistance_scenarios_lim.txt"
+  eir_filter: "morbidity_perennial_eir"
+  population_size: 50000
+  seasonality: "perennial"
+  vaccine_deployment: "age"
+  age_groups: [0.9, 2, 5, 10] # in years, time of first dose (=0.9), and cut-off for children
+  parameters:
+    fixed:
+      eir: *morbidity_perennial_30d_eir
+      coverage: [0.0, 0.2, 0.6, 0.8, 1.0]
+      coverage_reduced: 0.75
+      access: [0.0356, 0.2412, 0.5319]
+      ar_mkr_resistant: [0.0, 1.0, 3.0, 5.0, 27.6]
+      lf_resistance_level: [0.032, 0.32, 2.5]
+      prevalence_resistant: 0.5
+  cohorts:
+    include: no
+    tracking: "intervention_cohort" # use "intervention_cohort" or "vaccine"
+    begin_recruitment: 0.9 # in years, 0.0833 = 1 month
+    max_time: 0 # in years, set to 0 if individuals should not be removed
+  vaccination_strategies:
+  - id: age
+    name: "Age-based"
+    doses:
+      initial: 
+        age: [0.75, 50.75] # targetAge
+      booster:
+        age: [0.75, 50.75] # targetAge
+  vaccine:
+    efficacy: [0.911, 0.7745]
+    half_life: 0.61
+    k_decay: 0.69
+    resistance_scaler: 1.0
+
+
+# ---- TREATMENT FAILURE RATES ----
+
+# ---- Seasonal transmission setting ----
+
+# EIR fitting scenario to determine inputEIR values
+- id: treat_seasonal_eir
+  xml_template: "ACT_treatmentfailure"
+  population_size: 50000
+  timestep: 5
+  seasonality: "seasonal1"
+  age_groups: [2.0, 5.0, 10.0] # [0, ..., 99]
+  init_date: "2010-01-01"
+  burn_in: 20
+  sim_duration: 25
+  lead_time: 10
+  parameters:
+    fixed:
+      coverage: 0.0
+      coverage_reduced: 0.75
+      access: [0.0356, 0.2412, 0.5319]
+      ar_mkr_resistant: 27.6
+      lf_resistance_level: 0.032
+      prevalence_resistant: 0.5
+    continuous:
+      eir:
+        array_lhc:
+          lb: 0.1
+          ub: 600
+  vaccination_strategies:
+  - id: seasonal
+    name: "seasonal"
+    doses:
+      initial: 
+        age: [0.6667, 1.6667]
+      booster:
+        age: [[1.6667, 2.6667], [2.6667, 3.6667], [3.6667, 4.6667], [4.6667, 5.6667]] # [minAge, maxAge]
+    booster_conditional: no
+  vaccine:
+    efficacy: [0.911, 0.7745]
+    half_life: 0.61
+    k_decay: 0.69
+    resistance_scaler: 1.0
+  vaccine_deployment: "seasonal"
+
+# Deployment of RTS,S/AS01 to children
+- id: treat_seasonal_red
+  xml_template: "ACT_treatmentfailure"
+  resistance_scenarios: "resistance_scenarios_lim.txt"
+  eir_filter: "treat_seasonal_eir"
+  population_size: 50000
+  timestep: 5
+  seasonality: "seasonal1"
+  age_groups: [2.0, 5.0, 10.0] # [0, ..., 99]
+  init_date: "2010-01-01"
+  burn_in: 20
+  sim_duration: 25
+  lead_time: 10
+  parameters: 
+    fixed:
+      eir: *treat_seasonal_5d_eir
+      coverage: [0.0, 0.2, 0.6, 0.8]
+      coverage_reduced: 0.75
+      access: [0.0356, 0.2412, 0.5319]
+      ar_mkr_resistant: [0.0, 1.0, 3.0, 5.0, 27.6]
+      lf_resistance_level: [0.032, 0.32, 2.5]
+      prevalence_resistant: [0.2, 0.5, 0.8]
+  vaccination_strategies:
+  - id: seasonal
+    name: "seasonal"
+    doses:
+      initial: 
+        age: [0.6667, 1.6667]
+      booster:
+        age: [[1.6667, 2.6667], [2.6667, 3.6667], [3.6667, 4.6667], [4.6667, 5.6667]] # [minAge, maxAge]
+    booster_conditional: no
+  vaccine:
+    efficacy: [0.911, 0.7745]
+    half_life: 0.61
+    k_decay: 0.69
+    resistance_scaler: 1.0
+  vaccine_deployment: "seasonal"
+
+# Deployment of longer-lasting vaccine to children
+- id: treat_seasonal_altvax_red
+  xml_template: "ACT_treatmentfailure"
+  resistance_scenarios: "resistance_scenarios_lim.txt"
+  eir_filter: "treat_seasonal_eir"
+  population_size: 50000
+  timestep: 5
+  seasonality: "seasonal1"
+  age_groups: [2.0, 5.0, 10.0] # [0, ..., 99]
+  init_date: "2010-01-01"
+  burn_in: 20
+  sim_duration: 25
+  lead_time: 10
+  parameters:
+    fixed:
+      eir: *treat_seasonal_5d_eir
+      coverage: [0.0, 0.2, 0.6, 0.8]
+      coverage_reduced: 0.75
+      access: [0.0356, 0.2412, 0.5319]
+      ar_mkr_resistant: [0.0, 1.0, 3.0, 5.0, 27.6]
+      lf_resistance_level: [0.032, 0.32, 2.5]
+      prevalence_resistant: [0.2, 0.5, 0.8]
+  vaccination_strategies:
+  - id: seasonal
+    name: "seasonal"
+    doses:
+      initial: 
+        age: [0.6667, 1.6667]
+      booster:
+        age: [[1.6667, 2.6667], [2.6667, 3.6667], [3.6667, 4.6667], [4.6667, 5.6667]] # [minAge, maxAge]
+    booster_conditional: no
+  vaccine:
+    efficacy: [0.90, 0.89]
+    half_life: 2.56
+    k_decay: 0.75
+    resistance_scaler: 1.0
+  vaccine_deployment: "seasonal"
+
+# Deployment of longer-lasting vaccine as mass vaccination
+- id: treat_seasonal_altvax_massvax_red
+  xml_template: "ACT_treatmentfailure"
+  resistance_scenarios: "resistance_scenarios_lim.txt"
+  eir_filter: "treat_seasonal_eir"
+  population_size: 50000
+  seasonality: "seasonal1"
+  age_groups: [2.0, 5.0, 10.0] # [0, ..., 99]
+  init_date: "2010-01-01"
+  burn_in: 20
+  sim_duration: 25
+  lead_time: 10
+  ar_mkr_sensitive: 27.6
+  lf_sensitive_level: 0.032
+  parameters:
+    fixed:
+      eir: *treat_seasonal_5d_eir
+      coverage: [0.0, 0.2, 0.6, 0.8]
+      coverage_reduced: 0.75
+      access: [0.0356, 0.2412, 0.5319]
+      ar_mkr_resistant: [0.0, 1.0, 3.0, 5.0, 27.6]
+      lf_resistance_level: [0.032, 0.32, 2.5]
+      prevalence_resistant: [0.2, 0.5, 0.8]
+  vaccination_strategies:
+  - id: seasonal
+    name: "seasonal"
+    doses:
+      initial: 
+        age: [0.6667, 50.6667]
+      booster:
+        age: [[1.6667, 2.6667], [2.6667, 3.6667], [3.6667, 4.6667], 
+        [4.6667, 5.6667], [5.6667, 6.6667], [6.6667, 7.6667], 
+        [7.6667, 8.6667], [8.6667, 9.6667], [9.6667, 10.6667], 
+        [10.6667, 11.6667], [11.6667, 12.6667], [12.6667, 13.6667], 
+        [13.6667, 14.6667], [14.6667, 15.6667], [15.6667, 16.6667], 
+        [16.6667, 17.6667], [17.6667, 18.6667], [18.6667, 19.6667], 
+        [19.6667, 20.6667], [20.6667, 21.6667], [21.6667, 22.6667], 
+        [22.6667, 23.6667], [23.6667, 24.6667], [24.6667, 25.6667], 
+        [25.6667, 26.6667], [26.6667, 27.6667], [27.6667, 28.6667], 
+        [28.6667, 29.6667], [29.6667, 30.6667], [30.6667, 31.6667], 
+        [31.6667, 32.6667], [32.6667, 33.6667], [33.6667, 34.6667], 
+        [34.6667, 35.6667], [35.6667, 36.6667], [36.6667, 37.6667], 
+        [37.6667, 38.6667], [38.6667, 39.6667], [39.6667, 40.6667], 
+        [40.6667, 41.6667], [41.6667, 42.6667], [42.6667, 43.6667], 
+        [43.6667, 44.6667], [44.6667, 45.6667], [45.6667, 46.6667], 
+        [46.6667, 47.6667], [47.6667, 48.6667], [48.6667, 49.6667], 
+        [49.6667, 50.6667]] # [minAge, maxAge]
+    booster_conditional: no
+  vaccine:
+    efficacy: [0.90, 0.89]
+    half_life: 2.56
+    k_decay: 0.75
+    resistance_scaler: 1.0
+  vaccine_deployment: "seasonal"
+  
+# Deployment of RTS,S/AS01-like vaccine as mass vaccination
+- id: treat_seasonal_massvax_red
+  xml_template: "ACT_treatmentfailure"
+  resistance_scenarios: "resistance_scenarios_lim.txt"
+  eir_filter: "treat_seasonal_eir"
+  population_size: 50000
+  timestep: 5
+  seasonality: "seasonal1"
+  age_groups: [2.0, 5.0, 10.0] # [0, ..., 99]
+  init_date: "2010-01-01"
+  burn_in: 20
+  sim_duration: 25
+  lead_time: 10
+  ar_mkr_sensitive: 27.6
+  lf_sensitive_level: 0.032
+  parameters:
+    fixed:
+      eir: *treat_seasonal_5d_eir
+      coverage: [0.0, 0.2, 0.6, 0.8]
+      coverage_reduced: 0.75
+      access: [0.0356, 0.2412, 0.5319]
+      ar_mkr_resistant: [0.0, 1.0, 3.0, 5.0, 27.6]
+      lf_resistance_level: [0.032, 0.32, 2.5]
+      prevalence_resistant: [0.2, 0.5, 0.8]
+  vaccination_strategies:
+  - id: seasonal
+    name: "seasonal"
+    doses:
+      initial: 
+        age: [0.6667, 50.6667]
+      booster:
+        age: [[1.6667, 2.6667], [2.6667, 3.6667], [3.6667, 4.6667], 
+        [4.6667, 5.6667], [5.6667, 6.6667], [6.6667, 7.6667], 
+        [7.6667, 8.6667], [8.6667, 9.6667], [9.6667, 10.6667], 
+        [10.6667, 11.6667], [11.6667, 12.6667], [12.6667, 13.6667], 
+        [13.6667, 14.6667], [14.6667, 15.6667], [15.6667, 16.6667], 
+        [16.6667, 17.6667], [17.6667, 18.6667], [18.6667, 19.6667], 
+        [19.6667, 20.6667], [20.6667, 21.6667], [21.6667, 22.6667], 
+        [22.6667, 23.6667], [23.6667, 24.6667], [24.6667, 25.6667], 
+        [25.6667, 26.6667], [26.6667, 27.6667], [27.6667, 28.6667], 
+        [28.6667, 29.6667], [29.6667, 30.6667], [30.6667, 31.6667], 
+        [31.6667, 32.6667], [32.6667, 33.6667], [33.6667, 34.6667], 
+        [34.6667, 35.6667], [35.6667, 36.6667], [36.6667, 37.6667], 
+        [37.6667, 38.6667], [38.6667, 39.6667], [39.6667, 40.6667], 
+        [40.6667, 41.6667], [41.6667, 42.6667], [42.6667, 43.6667], 
+        [43.6667, 44.6667], [44.6667, 45.6667], [45.6667, 46.6667], 
+        [46.6667, 47.6667], [47.6667, 48.6667], [48.6667, 49.6667], 
+        [49.6667, 50.6667]] # [minAge, maxAge]
+    booster_conditional: no
+  vaccine:
+    efficacy: [0.911, 0.7745]
+    half_life: 0.61
+    k_decay: 0.69
+    resistance_scaler: 1.0
+  vaccine_deployment: "seasonal"
+
+# ---- Perennial transmission setting ----
+
+# EIR fitting scenario to determine inputEIR values
+- id: treat_perennial_eir
+  xml_template: "ACT_treatmentfailure"
+  population_size: 50000
+  seasonality: "perennial"
+  vaccine_deployment: "age"
+  timestep: 5
+  age_groups: [2.0, 5.0, 10.0]
+  init_date: "2010-01-01"
+  burn_in: 20
+  sim_duration: 25
+  lead_time: 10
+  ar_mkr_sensitive: 27.6
+  lf_sensitive_level: 0.032
+  parameters:
+    fixed:
+      coverage: 0.0
+      coverage_reduced: 0.75
+      access: [0.0356, 0.2412, 0.5319]
+      ar_mkr_resistant: 27.6
+      lf_resistance_level: 0.032
+      prevalence_resistant: 0.5
+    continuous:
+      eir:
+        array_lhc:
+          lb: 0.1
+          ub: 600
+  vaccination_strategies:
+  - id: age
+    name: "Age-based"
+    doses:
+      initial: 
+        age: 0.75 # targetAge
+      booster:
+        age: 1.75 # targetAge
+    booster_conditional: no
+  vaccine:
+    efficacy: [0.911, 0.7745]
+    half_life: 0.61
+    k_decay: 0.69
+    resistance_scaler: 1.0
+    
+# Deployment of RTS,S/AS01 to children
+- id: treat_perennial_red
+  xml_template: "ACT_treatmentfailure"
+  resistance_scenarios: "resistance_scenarios_lim.txt"
+  eir_filter: "treat_perennial_eir"
+  population_size: 50000
+  seasonality: "perennial"
+  vaccine_deployment: "age"
+  timestep: 5
+  age_groups: [2.0, 5.0, 10.0]
+  init_date: "2010-01-01"
+  burn_in: 20
+  sim_duration: 25
+  lead_time: 10
+  parameters:
+    fixed:
+      eir: *treat_perennial_5d_eir
+      coverage: [0.0, 0.2, 0.6, 0.8]
+      coverage_reduced: 0.75
+      access: [0.0356, 0.2412, 0.5319]
+      ar_mkr_resistant: [0.0, 1.0, 3.0, 5.0, 27.6]
+      lf_resistance_level: [0.032, 0.32, 2.5]
+      prevalence_resistant: [0.2, 0.5, 0.8]
+  vaccination_strategies:
+  - id: age
+    name: "Age-based"
+    doses:
+      initial: 
+        age: 0.75 # targetAge
+      booster:
+        age: 1.75 # targetAge
+    booster_conditional: no
+  vaccine:
+    efficacy: [0.911, 0.7745]
+    half_life: 0.61
+    k_decay: 0.69
+    resistance_scaler: 1.0
+
+# Deployment of longer-lasting vaccine to children
+- id: treat_perennial_altvax_red
+  xml_template: "ACT_treatmentfailure"
+  resistance_scenarios: "resistance_scenarios_lim.txt"
+  eir_filter: "treat_perennial_eir"
+  population_size: 50000
+  seasonality: "perennial"
+  vaccine_deployment: "age"
+  age_groups: [2.0, 5.0, 10.0]
+  init_date: "2010-01-01"
+  burn_in: 20
+  sim_duration: 25
+  lead_time: 10
+  ar_mkr_sensitive: 27.6
+  lf_sensitive_level: 0.032
+  parameters:
+    fixed:
+      eir: *treat_perennial_5d_eir
+      coverage: [0.0, 0.2, 0.6, 0.8]
+      coverage_reduced: 0.75
+      access: [0.0356, 0.2412, 0.5319]
+      ar_mkr_resistant: [0.0, 1.0, 3.0, 5.0, 27.6]
+      lf_resistance_level: [0.032, 0.32, 2.5]
+      prevalence_resistant: [0.2, 0.5, 0.8]
+  vaccination_strategies:
+  - id: age
+    name: "Age-based"
+    doses:
+      initial: 
+        age: 0.75 # targetAge
+      booster:
+        age: 1.75 # targetAge
+    booster_conditional: no
+  vaccine:
+    efficacy: [0.90, 0.89]
+    half_life: 2.56
+    k_decay: 0.75
+    resistance_scaler: 1.0
+    
+# Deployment of longer-lasting vaccine as mass vaccination
+- id: treat_perennial_altvax_massvax_red
+  xml_template: "ACT_treatmentfailure"
+  resistance_scenarios: "resistance_scenarios_lim.txt"
+  eir_filter: "treat_perennial_eir"
+  population_size: 50000
+  seasonality: "perennial"
+  vaccine_deployment: "age"
+  age_groups: [2.0, 5.0, 10.0]
+  init_date: "2010-01-01"
+  burn_in: 20
+  sim_duration: 25
+  lead_time: 10
+  ar_mkr_sensitive: 27.6
+  lf_sensitive_level: 0.032
+  parameters:
+    fixed:
+      eir: *treat_perennial_5d_eir
+      coverage: [0.0, 0.2, 0.6, 0.8]
+      coverage_reduced: 0.75
+      access: [0.0356, 0.2412, 0.5319]
+      ar_mkr_resistant: [0.0, 1.0, 3.0, 5.0, 27.6]
+      lf_resistance_level: [0.032, 0.32, 2.5]
+      prevalence_resistant: [0.2, 0.5, 0.8]
+  vaccination_strategies:
+  - id: age
+    name: "Age-based"
+    doses:
+      initial: 
+        age: [0.75, 50.75] # targetAge
+      booster:
+        age: [0.75, 50.75] # targetAge
+    booster_conditional: no
+  vaccine:
+    efficacy: [0.90, 0.89]
+    half_life: 2.56
+    k_decay: 0.75
+    resistance_scaler: 1.0
+
+# Deployment of RTS,S/AS01-like vaccine as mass vaccination
+- id: treat_perennial_massvax_red
+  xml_template: "ACT_treatmentfailure"
+  resistance_scenarios: "resistance_scenarios_lim.txt"
+  eir_filter: "treat_perennial_eir"
+  population_size: 50000
+  seasonality: "perennial"
+  vaccine_deployment: "age"
+  age_groups: [2.0, 5.0, 10.0]
+  init_date: "2010-01-01"
+  burn_in: 20
+  sim_duration: 25
+  lead_time: 10
+  ar_mkr_sensitive: 27.6
+  lf_sensitive_level: 0.032
+  parameters:
+    fixed:
+      eir: *treat_perennial_5d_eir
+      coverage: [0.0, 0.2, 0.6, 0.8]
+      coverage_reduced: 0.75
+      access: [0.0356, 0.2412, 0.5319]
+      ar_mkr_resistant: [0.0, 1.0, 3.0, 5.0, 27.6]
+      lf_resistance_level: [0.032, 0.32, 2.5]
+      prevalence_resistant: [0.2, 0.5, 0.8]
+  vaccination_strategies:
+  - id: age
+    name: "Age-based"
+    doses:
+      initial: 
+        age: [0.75, 50.75] # targetAge
+      booster:
+        age: [0.75, 50.75] # targetAge
+    booster_conditional: no
+  vaccine:
+    efficacy: [0.911, 0.7745]
+    half_life: 0.61
+    k_decay: 0.69
+    resistance_scaler: 1.0
+      
+labels:
+  parameters:
+    eir: "EIR"
+    coverage: "Vaccination\ncoverage"
+    coverage_reduced: "Booster coverage"
+    ar_mkr_resistant: "Emax of\nartemisinin"
+    lf_resistance_level: "Resistance to\nlong-acting drug"
+    access: "Treatment\naccess"
+    prevalence_resistant: "Prevalence of\nresistant genotype"
+  lhc_outcomes:
+    selection_coefficient: "Selection coefficient"
+    cumulative_nUncomp: "Cumulative uncomplicated episodes"
+    cumulative_nInfect: "Cumulative infections"
+    failure_nInfect_age_1: "Failure rate (nInfect) under 5y"
+    failure_nInfect_age_2: "Failure rate (nInfect) older 5y"
+    failure_nPatent_age_1: "Failure rate (nPatent) under 5y"
+    failure_nPatent_age_2: "Failure rate (nPatent) older 5y"

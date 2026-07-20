@@ -1,0 +1,1 @@
+<decay L="@half_life@" k="@k_decay@" function="weibull"/>

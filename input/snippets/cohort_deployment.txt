@@ -1,0 +1,6 @@
+<deployment name="intervention_cohort_deployment">
+  <component id="intervention_cohort"/>
+  <continuous>
+    <deploy targetAgeYrs="@recruitment_start@" coverage="@coverage@"/>
+  </continuous>
+</deployment>  

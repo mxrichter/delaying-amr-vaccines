@@ -1,0 +1,7 @@
+<deployment name="@deployment_name@">
+  <component id="vaccine"/>
+  <timed>
+  @deployment_restriction@
+  @deployment_schedule@
+  </timed>
+</deployment>

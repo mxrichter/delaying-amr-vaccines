@@ -1,0 +1,4 @@
+id,name,ar_mkr_resistant,lf_resistance_level,label
+none,"No resistance",27.6,0.032,"No resistance"
+medium,"Moderate resistance",3.0,0.32,"Moderate resistance"
+very_high, "Very high resistance",0.0,2.5,"Very high resistance"

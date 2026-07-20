@@ -1,0 +1,6 @@
+<seasonality annualEIR="1" input="EIR">     
+  <fourierSeries EIRRotateAngle="0">
+    <coeffic a="@a1@" b="@b1@"/>
+    <coeffic a="@a2@" b="@b2@"/>
+  </fourierSeries>
+</seasonality>

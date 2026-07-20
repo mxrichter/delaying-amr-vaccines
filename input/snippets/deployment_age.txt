@@ -1,0 +1,8 @@
+<deployment name="vaccine">
+  <component id="vaccine"/>
+  <continuous>
+    @deployment_restriction@
+    @deployment_dose3@
+    @deployment_booster@
+  </continuous>
+</deployment>

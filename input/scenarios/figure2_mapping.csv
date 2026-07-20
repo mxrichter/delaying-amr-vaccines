@@ -1,0 +1,9 @@
+scenario,transmission,target_group,vaccine
+morbidity_seasonal_ve,seasonal,children,rtssas01
+morbidity_seasonal_altvax_ve,seasonal,children,longerlasting
+morbidity_seasonal_massvax_ve,seasonal,all,rtssas01like
+morbidity_seasonal_altvax_massvax_ve,seasonal,all,longerlasting
+morbidity_perennial_ve,perennial,children,rtssas01
+morbidity_perennial_altvax_ve,perennial,children,longerlasting
+morbidity_perennial_massvax_ve,perennial,all,rtssas01like
+morbidity_perennial_altvax_massvax_ve,perennial,all,longerlasting

@@ -1,0 +1,11 @@
+
+
+---
+
+# ---- YAML file to override default options set in options.R ----
+
+# Use YAML format (e.g., "key: value", yes/no equals TRUE/FALSE)
+
+# --- General options ----
+
+analysis_name: "spread_seasonal" # has to match scenario ID in scenarios.yaml

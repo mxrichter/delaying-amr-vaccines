@@ -1,0 +1,1 @@
+<deploy time="@deployment_dose3_individual@" minAge="@min_age@" maxAge="@max_age@" vaccMinPrevDoses="0" vaccMaxCumDoses="@n_booster@" coverage="@coverage@"/>

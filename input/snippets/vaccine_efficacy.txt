@@ -1,0 +1,1 @@
+<initialEfficacy value="@vaccine_efficacy@"/>

@@ -1,0 +1,1 @@
+<subPopRemoval afterYears="@cohort_max_time@" />

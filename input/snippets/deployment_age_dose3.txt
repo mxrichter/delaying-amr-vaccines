@@ -1,0 +1,1 @@
+<deploy coverage="@coverage@" begin="@deployment_date@" targetAgeYrs="@age@" vaccMinPrevDoses="@min_dose@" vaccMaxCumDoses="@max_dose@"/>

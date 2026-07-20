@@ -1,0 +1,3 @@
+"analysis_name","subplot","plot_title"
+"morbidity_seasonal","low_mod","MANUSCRIPT_Figure-2_VE_Seasonal-transmission_RTSS_Children_Low-Mod-Access.png"
+"morbidity_seasonal","mod_high","SI_Figure-SX.png"

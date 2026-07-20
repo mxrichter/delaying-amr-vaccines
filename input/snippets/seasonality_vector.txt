@@ -1,0 +1,16 @@
+<seasonality annualEIR="1" input="EIR">
+<monthlyValues smoothing="fourier">
+<value>@seasonality1@</value>
+<value>@seasonality2@</value>
+<value>@seasonality3@</value>
+<value>@seasonality4@</value>
+<value>@seasonality5@</value>
+<value>@seasonality6@</value>
+<value>@seasonality7@</value>
+<value>@seasonality8@</value>
+<value>@seasonality9@</value>
+<value>@seasonality10@</value>
+<value>@seasonality11@</value>
+<value>@seasonality12@</value>
+</monthlyValues>
+</seasonality>

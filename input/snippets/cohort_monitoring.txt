@@ -1,0 +1,3 @@
+<cohorts>
+  <subPop id="@cohort_tracking@" number="1"/>
+</cohorts>

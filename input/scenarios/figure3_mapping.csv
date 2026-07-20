@@ -1,0 +1,11 @@
+scenario,transmission,target_group,vaccine
+treat_seasonal_red,seasonal,children,rtssas01
+treat_seasonal_altvax_red,seasonal,children,longerlasting
+treat_seasonal_massvax_red,seasonal,all,rtssas01like
+treat_seasonal_altvax_massvax_red,seasonal,all,longerlasting
+treat_perennial_red,perennial,children,rtssas01
+treat_perennial_altvax_red,perennial,children,longerlasting
+treat_perennial_massvax_red,perennial,all,rtssas01like
+treat_perennial_altvax_massvax_red,perennial,all,longerlasting
+
+
